@@ -6,7 +6,6 @@ on:
 jobs:
   build:
     name: Build unsigned IPA
-    # 【修改点 1】强制使用最新的 macOS 15 镜像，以便获得最新的 Xcode
     runs-on: macos-15
 
     steps:
@@ -14,9 +13,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Select Xcode version
-        # 【修改点 2】精确指定使用 Xcode 16.4，以彻底满足作者需要的 Swift 6.2
-        run: sudo xcode-select -s /Applications/Xcode_16.4.app
-        
+        # 终极修复：使用作者要求的超前代际版本 Xcode 26.3，以彻底匹配 Swift 6.2
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app
+
       - name: Pre-Resolve Swift Packages
         run: |
           xcodebuild -resolvePackageDependencies \
