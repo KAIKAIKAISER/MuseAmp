@@ -1,0 +1,43 @@
+name: Build MuseAmp IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      - name: Resolve Swift Packages
+        run: xcodebuild -resolvePackageDependencies -workspace MuseAmp.xcworkspace -scheme MuseAmp
+
+      - name: Build Archive (Skip Signing)
+        run: |
+          xcodebuild archive \
+            -workspace MuseAmp.xcworkspace \
+            -scheme MuseAmp \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/MuseAmp.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package into IPA
+        run: |
+          mkdir -p Payload
+          mv build/MuseAmp.xcarchive/Products/Applications/MuseAmp.app Payload/
+          zip -qr9 MuseAmp.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MuseAmp-Unsigned-IPA
+          path: MuseAmp.ipa
