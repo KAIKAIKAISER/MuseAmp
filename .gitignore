@@ -153,3 +153,5 @@ PLAN.md
 /MuseAmpDatabaseKit/build
 /Website/dist
 /Website/node_modules
+/Configuration/Developer.xcconfig
+/Configuration/DevelopmentDeveloper.xcconfig
