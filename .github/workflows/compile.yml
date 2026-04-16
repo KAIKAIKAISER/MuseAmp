@@ -13,10 +13,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Xcode
-        # 【修改了这里】使用默认的最新款 Xcode.app，避免版本号不对找不到路径
         run: sudo xcode-select -s /Applications/Xcode.app
 
       - name: Resolve constraints and Build
+        # 添加了 -skipMacroValidation 和 -skipPackagePluginValidation 跳过烦人的安全弹窗
         run: |
           xcodebuild archive \
             -workspace MuseAmp.xcworkspace \
@@ -25,6 +25,8 @@ jobs:
             -sdk iphoneos \
             -archivePath $PWD/build/MuseAmp.xcarchive \
             -clonedSourcePackagesDirPath ~/.spm \
+            -skipMacroValidation \
+            -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
