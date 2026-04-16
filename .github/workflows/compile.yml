@@ -12,18 +12,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Make
-        run: brew install make
+      - name: Select Xcode version
+        # 强制使用原作者在最新的 Actions 中肯定用的这版
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+        
+      - name: Pre-Resolve Swift Packages
+        # 使用这一步强制提前下载所有依赖包。如果这一步爆红，就能真正看到是什么依赖导致了 74 错误
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -workspace MuseAmp.xcworkspace \
+            -scheme MuseAmp \
+            -clonedSourcePackagesDirPath ~/.spm || true
 
-      - name: Build using Author's Native Makefile
-        # 直接使用原作者的构建系统，确保环境变量完全一致，并指定打 Release(正式版)
-        run: make build-ios CONFIGURATION=Release
+      - name: Build Archive (Skip Signing)
+        # 最精简纯净的构建命令
+        run: |
+          xcodebuild archive \
+            -workspace MuseAmp.xcworkspace \
+            -scheme MuseAmp \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/MuseAmp.xcarchive \
+            -clonedSourcePackagesDirPath ~/.spm \
+            -skipMacroValidation \
+            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO || exit 1
 
       - name: Package into IPA
         run: |
           mkdir -p Payload
-          # 原作者的 Makefile 会把生成的 APP 放到这个自建的隐藏文件夹里，我们把它提出来
-          cp -r /private/tmp/museamp-deriveddata/Build/Products/Release-iphoneos/MuseAmp.app Payload/
+          mv build/MuseAmp.xcarchive/Products/Applications/MuseAmp.app Payload/
           zip -qr9 MuseAmp.ipa Payload
 
       - name: Upload IPA Artifact
