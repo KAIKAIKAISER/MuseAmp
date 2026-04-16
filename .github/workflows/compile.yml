@@ -12,29 +12,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
+      - name: Install Make
+        run: brew install make
 
-      - name: Resolve constraints and Build
-        # 添加了 -skipMacroValidation 和 -skipPackagePluginValidation 跳过烦人的安全弹窗
-        run: |
-          xcodebuild archive \
-            -workspace MuseAmp.xcworkspace \
-            -scheme MuseAmp \
-            -configuration Release \
-            -sdk iphoneos \
-            -archivePath $PWD/build/MuseAmp.xcarchive \
-            -clonedSourcePackagesDirPath ~/.spm \
-            -skipMacroValidation \
-            -skipPackagePluginValidation \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+      - name: Build using Author's Native Makefile
+        # 直接使用原作者的构建系统，确保环境变量完全一致，并指定打 Release(正式版)
+        run: make build-ios CONFIGURATION=Release
 
       - name: Package into IPA
         run: |
           mkdir -p Payload
-          mv build/MuseAmp.xcarchive/Products/Applications/MuseAmp.app Payload/
+          # 原作者的 Makefile 会把生成的 APP 放到这个自建的隐藏文件夹里，我们把它提出来
+          cp -r /private/tmp/museamp-deriveddata/Build/Products/Release-iphoneos/MuseAmp.app Payload/
           zip -qr9 MuseAmp.ipa Payload
 
       - name: Upload IPA Artifact
